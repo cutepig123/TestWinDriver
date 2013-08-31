@@ -136,7 +136,7 @@ void EnumUSBHubs()
 	
 	int							idx = 0;
 	SP_DEVICE_INTERFACE_DATA	spDevIntDat = {0};
-	BOOL						bRes = FALSE;
+	//BOOL						bRes = FALSE;
 
 	PSP_DEVICE_INTERFACE_DETAIL_DATA	pSpDevIntDetDat = NULL;
 	DWORD								dwBytes = 0;
@@ -149,15 +149,16 @@ void EnumUSBHubs()
 		return;
 	}
 
-	// 2. Enumerate USB Root Hubs
-	for (;;idx++){
+	RtlZeroMemory(&spDevIntDat, sizeof(SP_DEVICE_INTERFACE_DATA));
+	spDevIntDat.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
-		RtlZeroMemory(&spDevIntDat, sizeof(SP_DEVICE_INTERFACE_DATA));
-		spDevIntDat.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-		bRes = ::SetupDiEnumDeviceInterfaces(hDevInfo, NULL,
-			&GUID_CLASS_USBHUB, idx, &spDevIntDat);
-		if (bRes == FALSE)
-			break;
+	// 2. Enumerate USB Root Hubs
+	for (;::SetupDiEnumDeviceInterfaces(hDevInfo, NULL,&GUID_CLASS_USBHUB, idx, &spDevIntDat);idx++){
+
+		
+		//bRes = ::SetupDiEnumDeviceInterfaces(hDevInfo, NULL,&GUID_CLASS_USBHUB, idx, &spDevIntDat);
+		//if (bRes == FALSE)
+		//	break;
 
 		dwBytes = 0;
 
@@ -168,7 +169,7 @@ void EnumUSBHubs()
 			pSpDevIntDetDat = (PSP_DEVICE_INTERFACE_DETAIL_DATA) ::GlobalAlloc(GPTR, dwBytes);
 			pSpDevIntDetDat->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 
-			bRes = ::SetupDiGetInterfaceDeviceDetail(hDevInfo, &spDevIntDat,
+			BOOL bRes = ::SetupDiGetInterfaceDeviceDetail(hDevInfo, &spDevIntDat,
 				pSpDevIntDetDat, dwBytes, &dwBytes, NULL);
 			if (bRes){
 
