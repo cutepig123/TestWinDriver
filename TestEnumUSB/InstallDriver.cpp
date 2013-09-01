@@ -1,9 +1,7 @@
 #include "stdafx.h"
-#include <windows.h>
-#include <assert.h>
 
-#define	CHK_STS	if(wSts<0) {assert(0);goto Exit;}
-#define	CHK_ASSERT(x)	if(!(x)) {wSts=-1; assert(0);goto Exit;}
+#include <SetupAPI.h>
+#include <Newdev.h>
 
 // startType: SERVICE_AUTO_START, SERVICE_BOOT_START, SERVICE_DEMAND_START, SERVICE_DISABLED, SERVICE_SYSTEM_START
 short InstallDriver(LPCTSTR driverName,LPCTSTR driverExec,DWORD startType)
@@ -96,6 +94,74 @@ Exit:
 
 	if(hSCManager)
 		CloseServiceHandle(hSCManager);
+
+	return wSts;
+}
+
+#define MAX_CLASS_NAME_LEN 300
+
+short InstallWDMDriver(IN LPCTSTR HardwareId,IN LPCTSTR INFFile,OUT PBOOL RebootRequired OPTIONAL)
+{
+	short wSts =0;
+	HDEVINFO DeviceInfoSet = 0;
+	SP_DEVINFO_DATA DeviceInfoData;
+	GUID ClassGUID;
+	TCHAR ClassName[MAX_CLASS_NAME_LEN];
+	BOOL isDevInfoCreated =0;
+	//AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+	// 首先从Inf文件中得到设备类GUID
+	CHK_ASSERT (SetupDiGetINFClass((LPTSTR)INFFile,&ClassGUID,ClassName,sizeof(ClassName),0));
+
+	DeviceInfoSet = SetupDiCreateDeviceInfoList(&ClassGUID,0);
+	CHK_ASSERT(DeviceInfoSet != INVALID_HANDLE_VALUE);
+
+	isDevInfoCreated =1;
+
+	// 打开该设备所属的类
+	DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+	CHK_ASSERT (SetupDiCreateDeviceInfo(DeviceInfoSet,
+		ClassName,
+		&ClassGUID,
+		NULL,
+		0,
+		DICD_GENERATE_ID,
+		&DeviceInfoData));
+
+	// 添加该设备
+	CHK_ASSERT(SetupDiSetDeviceRegistryProperty(DeviceInfoSet,
+		&DeviceInfoData,
+		SPDRP_HARDWAREID,
+		(LPBYTE)HardwareId,
+		(lstrlen(HardwareId)+1+1)*sizeof(TCHAR)));
+
+	
+	// 建立关联
+	CHK_ASSERT(!SetupDiCallClassInstaller(DIF_REGISTERDEVICE,
+		DeviceInfoSet,
+		&DeviceInfoData));
+
+	// 关联信息都已建立，安装本驱动（以前相当于建立了一个未知的设备）
+	if (!UpdateDriverForPlugAndPlayDevices(0,
+		HardwareId,
+		INFFile,
+		INSTALLFLAG_FORCE,
+		RebootRequired))
+	{
+		// 安装失败，需要把以前的创建的信息删除，否则将会留下一个未知设备
+		DWORD err = GetLastError();
+		//TRACE( "UpdateDriverForPlugAndPlayDevices failedn" );
+		//TRACE( "the errcode is 0x%x", err );
+
+		CHK_ASSERT (SetupDiCallClassInstaller(
+			DIF_REMOVE,
+			DeviceInfoSet,
+			&DeviceInfoData));
+	}
+
+Exit:
+	if(isDevInfoCreated)
+		SetupDiDestroyDeviceInfoList(DeviceInfoSet);
 
 	return wSts;
 }
