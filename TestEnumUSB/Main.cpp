@@ -8,6 +8,7 @@
 void EnumUSBHubs();
 short InstallDriver(LPCTSTR driverName,LPCTSTR driverExec,DWORD startType);
 short InstallWDMDriver(IN LPCTSTR HardwareId,IN LPCTSTR INFFile,OUT PBOOL RebootRequired OPTIONAL);
+short InstallWDMFromInf(const LPTSTR g_pInfPath);
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
@@ -27,6 +28,14 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 int _tmain(int argc, _TCHAR* argv[])
 {
 	short wSts =0;
+
+	_set_error_mode(_OUT_TO_MSGBOX);
+
+	if(cmdOptionExists(argv, argv+argc, "-debug"))
+	{
+		system("pause");
+	}
+
 	char* pcMode =getCmdOption(argv, argv+argc, "-mode");
 	CHK_ASSERT(pcMode);
 
@@ -74,6 +83,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		CHK_ASSERT( 0== InstallWDMDriver( pcHardwareId, pcINFFile,&RebootRequired ));
 
 		printf( "RebootRequired %d\n", RebootRequired );
+	}
+	else if(stricmp(pcMode,"InstallWDMFromInf")==0)
+	{
+		char* pcINFFile =getCmdOption(argv, argv+argc, "-INFFile");
+		CHK_ASSERT(pcINFFile);
+
+		CHK_ASSERT( 0== InstallWDMFromInf(  pcINFFile));
+
 	}
 	else
 		CHK_ASSERT(0);

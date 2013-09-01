@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <assert.h>
 
-#define	CHK_STS	if(wSts<0) {assert(0);goto Exit;}
-#define	CHK_ASSERT(x)	if(!(x)) {wSts=-1; assert(0);goto Exit;}
+//#define	CHK_STS	if(wSts<0) {assert(0);goto Exit;}
+#define	CHK_ASSERT(x)	if(!(x)) {wSts=-1; assert(!#x);goto Exit;}
 
 // TODO: reference additional headers your program requires here
