@@ -3,35 +3,6 @@
 #include <SetupAPI.h>
 #include <Newdev.h>
 
-// startType: SERVICE_AUTO_START, SERVICE_BOOT_START, SERVICE_DEMAND_START, SERVICE_DISABLED, SERVICE_SYSTEM_START
-short InstallDriver(LPCTSTR driverName,LPCTSTR driverExec,DWORD startType)
-{
-	short wSts =0;
-	SC_HANDLE hService =0;
-    SC_HANDLE hSCManager = OpenSCManager(NULL,NULL,SC_MANAGER_ALL_ACCESS);
-    CHK_ASSERT(hSCManager != NULL);
-
-    hService =CreateService ( hSCManager,    
-                        driverName,                
-                        driverName,                
-                        SERVICE_ALL_ACCESS,        
-                        SERVICE_KERNEL_DRIVER,    
-                        startType,                
-                        SERVICE_ERROR_NORMAL,    
-                        driverExec,                
-                        NULL, NULL, NULL, NULL, NULL);
-    CHK_ASSERT (hService != NULL) ;
-
-    
-Exit:
-	if(hService) CloseServiceHandle(hService);
-
-	if(hSCManager)
-		CloseServiceHandle(hSCManager);
-
-	return wSts;
-}
-
 short OpenService(LPCTSTR driverName)
 {
 	short wSts =0;
@@ -88,6 +59,7 @@ short StopService(LPCTSTR driverName)
 
 	SERVICE_STATUS serviceStatus;
     CHK_ASSERT ( ControlService(hService, SERVICE_CONTROL_STOP, &serviceStatus) ) ;
+
 Exit:
 	if(hService) 
 		CloseServiceHandle(hService);
@@ -97,6 +69,45 @@ Exit:
 
 	return wSts;
 }
+
+// startType: SERVICE_AUTO_START, SERVICE_BOOT_START, SERVICE_DEMAND_START, SERVICE_DISABLED, SERVICE_SYSTEM_START
+short InstallDriver(LPCTSTR driverName,LPCTSTR driverExec,DWORD startType)
+{
+	short wSts =0;
+	SC_HANDLE hService =0;
+    SC_HANDLE hSCManager = OpenSCManager(NULL,NULL,SC_MANAGER_ALL_ACCESS);
+    CHK_ASSERT(hSCManager != NULL);
+
+    hService =CreateService ( hSCManager,    
+                        driverName,                
+                        driverName,                
+                        SERVICE_ALL_ACCESS,        
+                        SERVICE_KERNEL_DRIVER,    
+                        startType,                
+                        SERVICE_ERROR_NORMAL,    
+                        driverExec,                
+                        NULL, NULL, NULL, NULL, NULL);
+    CHK_ASSERT (hService != NULL) ;
+
+	//printf("Press any key to open service\n");
+	//getchar();
+ //  //CHK_ASSERT (0==OpenService(driverName));
+	//CHK_ASSERT ( StartService(hService,0,NULL) ) ;
+ //  //CHK_ASSERT (0==StopService(driverName));
+	//SERVICE_STATUS serviceStatus;
+ //   CHK_ASSERT ( ControlService(hService, SERVICE_CONTROL_STOP, &serviceStatus) ) ;
+ //  //CHK_ASSERT (0==RemoveService(driverName));
+	// CHK_ASSERT ( DeleteService(hService) ) ;
+Exit:
+	if(hService) CloseServiceHandle(hService);
+
+	if(hSCManager)
+		CloseServiceHandle(hSCManager);
+
+	return wSts;
+}
+
+
 
 #define MAX_CLASS_NAME_LEN 300
 

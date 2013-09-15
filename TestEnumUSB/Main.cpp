@@ -7,6 +7,11 @@
 
 void EnumUSBHubs();
 short InstallDriver(LPCTSTR driverName,LPCTSTR driverExec,DWORD startType);
+short OpenService(LPCTSTR driverName);
+short RemoveService(LPCTSTR driverName);
+short StopService(LPCTSTR driverName);
+short TestWriteFile(const char *file);
+
 short InstallWDMDriver(IN LPCTSTR HardwareId,IN LPCTSTR INFFile,OUT PBOOL RebootRequired OPTIONAL);
 short InstallWDMFromInf(const LPTSTR g_pInfPath);
 
@@ -71,6 +76,27 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		CHK_ASSERT( 0==InstallDriver(pcdriverName, pcdriverPath, dwStartType ));
 	}
+	else if(stricmp(pcMode,"OpenService")==0)
+	{
+		char* pcdriverName =getCmdOption(argv, argv+argc, "-driverName");
+		CHK_ASSERT(pcdriverName);
+
+		CHK_ASSERT( 0==OpenService(pcdriverName));
+	}
+	else if(stricmp(pcMode,"StopService")==0)
+	{
+		char* pcdriverName =getCmdOption(argv, argv+argc, "-driverName");
+		CHK_ASSERT(pcdriverName);
+
+		CHK_ASSERT( 0==StopService(pcdriverName));
+	}
+	else if(stricmp(pcMode,"RemoveService")==0)
+	{
+		char* pcdriverName =getCmdOption(argv, argv+argc, "-driverName");
+		CHK_ASSERT(pcdriverName);
+
+		CHK_ASSERT( 0==RemoveService(pcdriverName));
+	}
 	else if(stricmp(pcMode,"InstallWDMDriver")==0)
 	{
 		char* pcHardwareId =getCmdOption(argv, argv+argc, "-HardwareId");
@@ -90,6 +116,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		CHK_ASSERT(pcINFFile);
 
 		CHK_ASSERT( 0== InstallWDMFromInf(  pcINFFile));
+
+	}
+	else if(stricmp(pcMode,"WriteFile")==0)
+	{
+		char* pcFile =getCmdOption(argv, argv+argc, "-File");
+		CHK_ASSERT(pcFile);
+
+		CHK_ASSERT( 0== TestWriteFile( pcFile));
 
 	}
 	else
