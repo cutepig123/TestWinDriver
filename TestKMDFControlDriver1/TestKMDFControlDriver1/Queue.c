@@ -81,6 +81,7 @@ Return Value:
     return status;
 }
 
+
 VOID
 TestKMDFControlDriver1EvtIoDeviceControl(
     _In_ WDFQUEUE Queue,
@@ -114,12 +115,46 @@ Return Value:
 
 --*/
 {
+	// http://blog.csdn.net/chongxing01/article/details/7650399
+
+#define	CHK_NTSTS(status) if (!NT_SUCCESS(status)) {  /*TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "Line %d failed %!STATUS!", __LINE__, status); */goto Exit;}
+
+	char isReqComp = 0;
+	NTSTATUS status = STATUS_SUCCESS;
+	char *buffer = NULL; 
+	char *outbuffer = NULL;
+
     TraceEvents(TRACE_LEVEL_INFORMATION, 
                 TRACE_QUEUE, 
                 "!FUNC! Queue 0x%p, Request 0x%p OutputBufferLength %d InputBufferLength %d IoControlCode %d", 
                 Queue, Request, (int) OutputBufferLength, (int) InputBufferLength, IoControlCode);
 
-    WdfRequestComplete(Request, STATUS_SUCCESS);
+
+	status = WdfRequestRetrieveInputBuffer(Request, InputBufferLength, &buffer, NULL);
+	CHK_NTSTS(status);
+
+	TraceEvents(TRACE_LEVEL_INFORMATION,TRACE_QUEUE,"!FUNC! Queue Data is ");
+	for (int i = 0; i < InputBufferLength; i++)
+		TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE, "%x ", buffer[i]);
+
+	status = WdfRequestRetrieveOutputBuffer(Request, OutputBufferLength, &outbuffer, NULL);
+	CHK_NTSTS(status);
+
+	char *output = "Output";
+	if (OutputBufferLength < strlen(output) + 1)
+	{
+		status = STATUS_UNSUCCESSFUL;
+		TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "Line %d failed %!STATUS!", __LINE__, status);
+		CHK_NTSTS(status);
+	}
+
+	strcpy(outbuffer, output);
+
+	WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, OutputBufferLength);
+	isReqComp = 1;
+Exit:
+	if (!isReqComp)
+		WdfRequestComplete(Request, status);
 
     return;
 }

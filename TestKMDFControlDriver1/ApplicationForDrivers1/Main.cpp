@@ -1,3 +1,5 @@
+//http://www.e-reading.ws/chapter.php/147098/147/Cant_-_Writing_Windows_WDM_Device_Drivers.html
+
 #define INITGUID
 
 #include <Windows.h>
@@ -87,9 +89,10 @@ int main()
 		HANDLE handle = GetDeviceViaInterface(&guid, i);
 		if (!handle)
 			break;
-		char inbuffer[10];
-		char outbuffer[5];
+		char inbuffer[10]="Input";
+		char outbuffer[20] = { 0 };
 		DWORD byteReturn = 0;
 		VERIFY(DeviceIoControl(handle, 0x1234, inbuffer, sizeof(inbuffer), outbuffer, sizeof(outbuffer), &byteReturn, 0));
+		printf("return: %s\n", outbuffer);
 	}
 }
